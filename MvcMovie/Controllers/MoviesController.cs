@@ -15,9 +15,28 @@ namespace MvcMovie.Controllers
         private MovieDBContext db = new MovieDBContext();
 
         // GET: Movies
-        public ActionResult Index()
+        public ActionResult Index(string movieGenre, string search)
         {
-            return View(db.Movies.ToList());
+            var genres = new List<string>();
+            var genresQuery = from m in db.Movies
+                              orderby m.Genre
+                              select m.Genre;
+            genres.AddRange(genresQuery.Distinct());
+            ViewBag.movieGenre = new SelectList(genres);
+
+            var movie = from m in db.Movies
+                        select m;
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                movie = movie.Where(s => s.Title.Contains(search));
+            }
+            if (!string.IsNullOrEmpty(movieGenre))
+            {
+                movie = movie.Where(x => x.Genre == movieGenre);
+            }
+
+            return View(movie);
         }
 
         // GET: Movies/Details/5
@@ -46,7 +65,7 @@ namespace MvcMovie.Controllers
         // más información vea https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "ID,Title,ReleaseDate,Genre,Price")] Movie movie)
+        public ActionResult Create([Bind(Include = "ID,Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (ModelState.IsValid)
             {
@@ -78,7 +97,7 @@ namespace MvcMovie.Controllers
         // más información vea https://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "ID,Title,ReleaseDate,Genre,Price")] Movie movie)
+        public ActionResult Edit([Bind(Include = "ID,Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (ModelState.IsValid)
             {
